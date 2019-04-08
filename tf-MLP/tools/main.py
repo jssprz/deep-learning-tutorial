@@ -1,5 +1,6 @@
-"""
-Author: jssprz
+#!/usr/bin/env python
+"""Provides the main function
+The tests can be executed from command line setting the dataset and the phase
 """
 
 import sys
@@ -9,6 +10,12 @@ import argparse
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import mlp.mlp as mlp
 import mlp.fast_predictor as fp
+
+__author__ = "jssprz"
+__version__ = "0.0.2"
+__maintainer__ = "jssprz"
+__email__ = "jperezmartin90@gmail.com"
+__status__ = "Development"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train the model for a specific dataset')
