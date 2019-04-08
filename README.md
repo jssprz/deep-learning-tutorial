@@ -1,2 +1,9 @@
-# CC6204
-Examples for CC6204 Deep Learning
+# Tutorial for Deep Learning
+This tutorial provides the implementation in python of several deep learning and machine learning techniques.
+
+## Requirements
+
+## Datasets
+
+- MNIST
+- Quickdraw-Animals
