@@ -17,6 +17,7 @@ class MLP:
         self.class_labels = params['class_labels']
         self.number_of_classes = len(self.class_labels)
         self.number_of_iterations = params['number_of_iterations']
+        self.save_checkpoints_steps = params['save_checkpoints_steps']
         self.batch_size = params['batch_size']
         self.data_size = params['data_size']
         self.number_of_batches = np.round(self.data_size / self.batch_size)
@@ -41,8 +42,7 @@ class MLP:
                              'number_of_batches': self.number_of_batches,
                              'number_of_epochs': self.number_of_epochs,
                              'input_size': self.input_size,
-                             'number_of_classes': self.number_of_classes,
-                             }
+                             'number_of_classes': self.number_of_classes}
 
         self.estimator_params = {'learning_rate': self.learning_rate,
                                  'number_of_classes': self.number_of_classes,
@@ -50,15 +50,23 @@ class MLP:
                                  'input_size': self.input_size,
                                  'activation': self.activation_function,
                                  'activation-param': self.activation_function_param,
-                                 'optimizer': self.optimizer}
+                                 'optimizer': self.optimizer,
+                                 'class_labels': self.class_labels}
 
-    def train(self):
+    def train(self, use_early_stopping=False):
         """training"""
         # -using device gpu or cpu
         with tf.device(self.device):
             estimator_config = tf.estimator.RunConfig(model_dir=self.modeldir,
-                                                      save_checkpoints_steps=1000,
-                                                      keep_checkpoint_max=10)
+                                                      save_checkpoints_steps=self.save_checkpoints_steps,
+                                                      keep_checkpoint_max=0)
+
+            summary_dir = os.path.join(self.modeldir, 'cm-eval')
+            if not os.path.exists(summary_dir):
+                os.makedirs(summary_dir)
+            self.estimator_params['cm-summary'] = summary_dir
+
+            print(self.estimator_params)
 
             classifier = tf.estimator.Estimator(model_fn=model.model_fn,
                                                 config=estimator_config,
@@ -66,15 +74,24 @@ class MLP:
 
             tf.logging.set_verbosity(tf.logging.INFO)  # Just to have some logs to display for demonstration
 
-            # training
-            train_spec = tf.estimator.TrainSpec(
-                input_fn=lambda: data.input_fn(self.filename_train, self.input_params, self.mean_vector, True),
-                max_steps=self.number_of_iterations)  # max_steps is not useful when inherited checkspoint is used
+            if use_early_stopping:
+                early_stopping = tf.contrib.estimator.stop_if_no_decrease_hook(
+                    classifier,
+                    metric_name='loss',
+                    max_steps_without_decrease=1000,
+                    min_steps=100)
 
-            # evaluating in the test set
+                train_spec = tf.estimator.TrainSpec(
+                    input_fn=lambda: data.input_fn(self.filename_train, self.input_params, self.mean_vector, True),
+                    max_steps=self.number_of_iterations, hooks=[early_stopping])  # max_steps is not useful when inherited checkspoint is used
+            else:
+                train_spec = tf.estimator.TrainSpec(
+                    input_fn=lambda: data.input_fn(self.filename_train, self.input_params, self.mean_vector, True),
+                    max_steps=self.number_of_iterations)  # max_steps is not useful when inherited checkspoint is used
+
             eval_spec = tf.estimator.EvalSpec(
                 input_fn=lambda: data.input_fn(self.filename_test, self.input_params, self.mean_vector, False),
-                throttle_secs=20)
+                throttle_secs=1)
 
             tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
 
@@ -96,23 +113,17 @@ class MLP:
 
             return result
 
-    def confusion_matrix_for_test(self):
+    def confusion_matrix_for_test(self, checkpoint_iter=None):
         """test checkpoint exist """
         assert os.path.exists(os.path.join(self.modeldir, "checkpoint")), "Checkpoint file does not exist in {}".format(
             self.modeldir)
         """testing"""
         with tf.device(self.device):
             tf.logging.set_verbosity(tf.logging.INFO)
-            estimator_config = tf.estimator.RunConfig(model_dir=self.modeldir)
 
             classifier = tf.estimator.Estimator(model_fn=model.model_fn,
-                                                config=estimator_config,
+                                                model_dir=self.modeldir,
                                                 params=self.estimator_params)
-
-            result = list(classifier.predict(
-                input_fn=lambda: data.input_fn(self.filename_test, self.input_params, self.mean_vector, False)))
-
-            predicted_labels = [self.class_labels[p["class_ids"][0]] for p in result]
 
             with open(os.path.join(self.datadir, "test.txt"), 'r') as file:
                 lines = [line.rstrip() for line in file]
@@ -120,16 +131,53 @@ class MLP:
                 filenames, labels = zip(*lines_)
                 truth_labels = [self.class_labels[x] for x in data.validateLabels(labels)]
 
-            ''' confusion matrix summaries '''
-            img_d_summary_dir = os.path.join(self.modeldir, 'test-cm')
-            if 'summaries' not in os.listdir(self.modeldir):
-                os.mkdir(os.path.join(self.modeldir, 'test-cm'))
+            summary_dir = os.path.join(self.modeldir, 'cm')
+            if 'cm' not in os.listdir(self.modeldir):
+                os.mkdir(os.path.join(self.modeldir, 'cm'))
 
-            img_d_summary_writer = tf.summary.FileWriter(img_d_summary_dir)
-            img_d_summary = cm.plot_confusion_matrix(truth_labels, predicted_labels, self.class_labels, tensor_name='confusion-matrix/test')
-            img_d_summary_writer.add_summary(img_d_summary)
+            summary_writer = tf.summary.FileWriter(logdir=summary_dir, max_queue=150)
 
-    def save_model(self):
+            if checkpoint_iter is not None:
+                result = list(classifier.predict(
+                    input_fn=lambda: data.input_fn(self.filename_test, self.input_params, self.mean_vector, False),
+                    checkpoint_path=os.path.join(self.modeldir, 'model.ckpt-{}'.format(checkpoint_iter))))
+
+                predicted_labels = [self.class_labels[p["class_ids"][0]] for p in result]
+
+                ''' confusion matrix summaries '''
+                abs_img_summary = cm.plot_confusion_matrix(correct_labels=truth_labels,
+                                                           predict_labels=predicted_labels,
+                                                           labels=self.class_labels,
+                                                           tensor_name='abs-confusion-matrix')
+                norm_img_summary = cm.plot_confusion_matrix(correct_labels=truth_labels,
+                                                            predict_labels=predicted_labels,
+                                                            labels=self.class_labels,
+                                                            tensor_name='norm-confusion-matrix',
+                                                            normalize=True)
+                summary_writer.add_summary(abs_img_summary)
+                summary_writer.add_summary(norm_img_summary)
+            else:
+                for checkpoint_iter in range(0, self.number_of_iterations + 1, self.save_checkpoints_steps):
+                    result = list(classifier.predict(
+                        input_fn=lambda: data.input_fn(self.filename_test, self.input_params, self.mean_vector, False),
+                        checkpoint_path=os.path.join(self.modeldir, 'model.ckpt-{}'.format(checkpoint_iter))))
+
+                    predicted_labels = [self.class_labels[p["class_ids"][0]] for p in result]
+
+                    ''' confusion matrix summaries '''
+                    abs_img_summary = cm.plot_confusion_matrix(correct_labels=truth_labels,
+                                                               predict_labels=predicted_labels,
+                                                               labels=self.class_labels,
+                                                               tensor_name='abs-confusion-matrix')
+                    norm_img_summary = cm.plot_confusion_matrix(correct_labels=truth_labels,
+                                                                predict_labels=predicted_labels,
+                                                                labels=self.class_labels,
+                                                                tensor_name='norm-confusion-matrix',
+                                                                normalize=True)
+                    summary_writer.add_summary(abs_img_summary, checkpoint_iter)
+                    summary_writer.add_summary(norm_img_summary, checkpoint_iter)
+
+    def save_model(self, checkpoint_iter=None):
         assert os.path.exists(os.path.join(self.modeldir, "checkpoint")), "Checkpoint file does not exist in {}".format(
             self.modeldir)
 
