@@ -14,8 +14,14 @@ def gaussian_weights(shape, mean, stddev):
 
 
 def fc_layer(_input, size, name, activation='sigmoid', activation_param=0.1):
-    """
-    a fully connected layer
+    """Defines a fully-connected layer
+    :param _input: The input batch to be processed
+    :param size: Defines the number of neurons into the layer
+    :param name: Defines de name of the layer
+    :param activation: Name of the activation function to be used
+    :param activation_param: Defines the parameter to be used for some activation functions
+
+    :returns: The activation values of the neurons
     """
 
     # shape is a 1D tensor with 4 values
@@ -26,18 +32,17 @@ def fc_layer(_input, size, name, activation='sigmoid', activation_param=0.1):
     W = tf.Variable(gaussian_weights(shape, 0.0, 0.02), name=name)
     b = tf.Variable(tf.zeros(size))
 
-    # just a  multiplication between input[N_in x D]xW[N_in x N_out]
+    # computes input[N_in x D] x W[N_in x N_out] + b[N_out]
     layer = tf.add(tf.matmul(_input, W), b)
 
     if activation == 'sigmoid':
-        layer = tf.nn.sigmoid(layer)
-    if activation == 'tanh':
-        layer = tf.nn.tanh(layer)
-    if activation == 'relu':
-        layer = tf.nn.relu(layer)
-    if activation == 'leaky-relu':
-        layer = tf.nn.leaky_relu(layer, alpha=activation_param)
-
+        return tf.nn.sigmoid(layer)
+    elif activation == 'tanh':
+        return tf.nn.tanh(layer)
+    elif activation == 'relu':
+        return tf.nn.relu(layer)
+    elif activation == 'leaky-relu':
+        return tf.nn.leaky_relu(layer, alpha=activation_param)
     return layer
 
 
@@ -62,53 +67,101 @@ def mlp_fn(features, input_size, n_classes, activation, activation_param):
     return {"output": fc3}
 
 
-# defining a model that feeds the Estimator
+def eval_confusion_matrix(labels, predictions, num_classes):
+    con_matrix = tf.confusion_matrix(labels=labels, predictions=predictions, num_classes=num_classes)
+
+    con_matrix_sum = tf.Variable(tf.zeros(shape=(num_classes, num_classes), dtype=tf.int32),
+                                 trainable=False,
+                                 name="confusion_matrix_result",
+                                 collections=[tf.GraphKeys.LOCAL_VARIABLES])
+
+    update_op = tf.assign_add(con_matrix_sum, con_matrix)
+
+    return tf.convert_to_tensor(con_matrix_sum), update_op
+
+
 def model_fn(features, labels, mode, params):
-    """The signature here is standard according to Estimators. 
-       The output is an EstimatorSpec
+    """Defines a model that feeds the Estimator
+    The signature here is standard according to Estimators.
+    The output is an EstimatorSpec
+    :param features: The set of features to be processed
+    :param labels: The set of correct labels for the features
+    :param mode: Specifies if this training, evaluation or prediction
+    :param params: dict of hyperparameters to configure Estimator from hyper parameter tuning
+
+    :returns: The model definition with the ops and objects to be run by an Estimator
+    :rtype: EstimatorSpec
     """
 
     net = mlp_fn(features,
                  params['input_size'],
                  params['number_of_classes'],
                  params['activation'],
-                 params['activation-param'])
+                 params['activation_param'])
     logits = net["output"]
 
     idx_predicted_class = tf.argmax(logits, 1)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        # --------------------------------------
-        # If prediction mode, predictions is returned
-        predictions = {
-            'class_ids': idx_predicted_class[:, tf.newaxis],
-            'probabilities': tf.nn.softmax(logits),
-            'logits': logits,
-        }
-        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
-    else:  # TRAIN or EVAL
-        idx_true_class = tf.argmax(labels, 1)
-
-        # Define the evaluation metrics of the model
-        acc_op, accuracy_update = tf.metrics.accuracy(labels=idx_true_class, predictions=idx_predicted_class)
-        recall_op = tf.metrics.recall(labels=idx_true_class, predictions=idx_predicted_class)
-        false_neg_op = tf.metrics.false_negatives(labels=idx_true_class, predictions=idx_predicted_class)
-
+        return tf.estimator.EstimatorSpec(
+            mode=mode,
+            predictions={'class_ids': idx_predicted_class[:, tf.newaxis],
+                         'probabilities': tf.nn.softmax(logits),
+                         'logits': logits})
+    else:
         # Define loss - e.g. cross_entropy - mean(cross_entropy x batch)
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)
         loss = tf.reduce_mean(cross_entropy)
 
-        if params['optimizer'] == 'gradient-descent':
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=params['learning_rate'])
-        else:
-            optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+        if mode == tf.estimator.ModeKeys.EVAL:
+            idx_true_class = tf.argmax(labels, 1)
 
-        train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
+            # Define the evaluation metrics of the model
+            acc_op = tf.metrics.accuracy(labels=idx_true_class, predictions=idx_predicted_class)
+            precision_op = tf.metrics.precision(labels=idx_true_class, predictions=idx_predicted_class)
+            recall_op = tf.metrics.recall(labels=idx_true_class, predictions=idx_predicted_class)
+            false_neg_op = tf.metrics.false_negatives(labels=idx_true_class, predictions=idx_predicted_class)
+            cm_op = eval_confusion_matrix(labels=idx_true_class, predictions=idx_predicted_class,
+                                          num_classes=params['number_of_classes'])
 
-        # EstimatorSpec
-        return tf.estimator.EstimatorSpec(
-            mode=mode,
-            predictions=idx_predicted_class,
-            loss=loss,
-            train_op=train_op,
-            eval_metric_ops={'accuracy': (acc_op, accuracy_update), 'recall': recall_op, 'false_neg': false_neg_op})
+            # ''' confusion matrix summaries '''
+            # sess = tf.Session()
+            # correct_labels = [params['class_labels'][p] for p in tf.map_fn(lambda x: x, idx_true_class)]
+            # predict_labels = [params['class_labels'][p] for p in tf.map_fn(lambda x: x, idx_predicted_class)]
+            # abs_img_summary = cm.plot_confusion_matrix(correct_labels=correct_labels,
+            #                                            predict_labels=predict_labels,
+            #                                            labels=params['class_labels'],
+            #                                            tensor_name='abs-confusion-matrix')
+            # norm_img_summary = cm.plot_confusion_matrix(correct_labels=correct_labels,
+            #                                             predict_labels=predict_labels,
+            #                                             labels=params['class_labels'],
+            #                                             tensor_name='norm-confusion-matrix',
+            #                                             normalize=True)
+            # tf.summary.image(abs_img_summary)
+            # tf.summary.image(norm_img_summary)
+
+            return tf.estimator.EstimatorSpec(
+                mode=mode,
+                predictions=idx_predicted_class,
+                loss=loss,
+                eval_metric_ops={'accuracy': acc_op, 'precision': precision_op, 'recall': recall_op,
+                                 'false_neg': false_neg_op, 'conf_matrix': cm_op})
+        else:  # TRAIN
+            if params['optimizer'] == 'gd':
+                optimizer = tf.train.GradientDescentOptimizer(learning_rate=params['learning_rate'])
+            elif params['optimizer'] == 'momentum':
+                optimizer = tf.train.MomentumOptimizer(learning_rate=params['learning_rate'],
+                                                       momentum=params['opt_param'])
+            elif params['optimizer'] == 'adagrad':
+                optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'])
+            elif params['optimizer'] == 'rmsprop':
+                optimizer = tf.train.RMSPropOptimizer(learning_rate=params['learning_rate'])
+            else:
+                optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+
+            train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
+
+            return tf.estimator.EstimatorSpec(
+                mode=mode,
+                loss=loss,
+                train_op=train_op)
