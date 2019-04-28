@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Tutorial for Deep Learning
 This tutorial provides the implementation in python of several deep learning and machine learning techniques.
 
@@ -8,7 +7,7 @@ This tutorial provides the implementation in python of several deep learning and
 
 - MNIST
 - Quickdraw-Animals
-=======
+
 # ConvNet Description 
 ConvNet is a set of modules based on TensorFlow aiming to make the process of creating, training and testing convolutional neural models easier. A module for a fast prediction, after saving the trained model, is also included.
 
@@ -144,12 +143,3 @@ For faster prediction you will need to run *tools/predict.py*
    - [QuicDraw-Animals](https://www.dropbox.com/sh/hsqjv0kd13xda3g/AABYkVk0ruG85s4aL4C1nDKaa?dl=0), including 12 classes of animales from the [QuickDraw](https://github.com/googlecreativelab/quickdraw-dataset) dataset
    
   Note: For training with a new dataset, you should to appropriately modify  some parameters in the configuration file.
-  
-**Contact**
-
-*Jose M. Saavedra*
-
-jose\<dot>saavedra\<at>orand\<dot>cl
-
-Orand S.A.
->>>>>>> CC6204/master
