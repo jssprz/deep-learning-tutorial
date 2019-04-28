@@ -6,3 +6,11 @@
 *.pydevproject
 *__pycache__
 
+#models directories
+*models
+
+#virtual environment directory
+venv
+
+#Pycharm project files
+.idea/
