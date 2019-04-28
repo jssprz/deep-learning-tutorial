@@ -90,10 +90,17 @@ def readDataFromTextFile(str_path, dataset="train", shuf=True):
     and  shuffle it by default
     str_path: path where data can be found
     dataset: train or test
+<<<<<<< HEAD
     shuf: Truel or Flase for shuffling 
     """
     datafile = os.path.join(str_path, dataset + ".txt")
     assert os.path.exists(datafile)
+=======
+    shuf: True or Flase for shuffling 
+    """            
+    datafile = os.path.join(str_path, dataset + ".txt")    
+    assert os.path.exists(datafile)        
+>>>>>>> CC6204/master
     # reading data from files, line by line
     with open(datafile) as file:
         lines = [line.rstrip() for line in file]
