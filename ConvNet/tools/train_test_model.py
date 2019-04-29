@@ -43,9 +43,10 @@ if __name__ == '__main__':
     # it is also possible to define the id of the device
     if pargs.device == 'gpu':
         freer_gpu_id = get_freer_gpu()
-        device_name = '/gpu:{}'.format(freer_gpu_id)
+        device_name = '/device:GPU:{}'.format(freer_gpu_id)
     else:
         device_name = "/cpu:0"
+    print('Running on {} device'.format(device_name))
 
     params = {'device': device_name, 'modelname': pargs.name}
 
