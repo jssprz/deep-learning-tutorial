@@ -84,7 +84,7 @@ class CNN:
                                                                              self.mean_img,
                                                                              is_training=False,
                                                                              configuration=self.configuration),
-                                              throttle_secs=self.configuration.test_time)
+                                              throttle_secs=1)
             #
             tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
 
