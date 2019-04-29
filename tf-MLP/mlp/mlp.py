@@ -96,10 +96,10 @@ class MLP:
             tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
 
     def test(self):
-        """test checkpoint exist """
+        """check if checkpoint exist """
         assert os.path.exists(os.path.join(self.modeldir, "checkpoint")), "Checkpoint file does not exist in {}".format(
             self.modeldir)
-        """testing"""
+
         with tf.device(self.device):
             tf.logging.set_verbosity(tf.logging.INFO)
             estimator_config = tf.estimator.RunConfig(model_dir=self.modeldir)
