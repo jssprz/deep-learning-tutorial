@@ -33,6 +33,6 @@ if __name__ == '__main__':
     configuration_file = pargs.config
     assert os.path.exists(configuration_file), "configuration file does not exist {}".format(configuration_file)
     configuration = conf.ConfigurationFile(configuration_file, pargs.name)
-    data.createTFRecord(configuration.data_dir(), pargs.type, (imh, imw),
-                        number_of_channels=configuration.number_of_channels(), processFun=imgproc.process_fun())
-    print("tfrecords created for " + configuration.data_dir())
+    data.createTFRecord(configuration.data_dir, pargs.type, (imh, imw),
+                        number_of_channels=configuration.number_of_channels, processFun=imgproc.process_fun())
+    print("tfrecords created for " + configuration.data_dir)
