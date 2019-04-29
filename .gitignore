@@ -14,3 +14,6 @@ venv
 
 #Pycharm project files
 .idea/
+
+#configuration files
+*.ini
