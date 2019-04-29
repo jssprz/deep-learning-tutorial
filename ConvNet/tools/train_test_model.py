@@ -11,13 +11,15 @@ For more details see cnnLib.cnn
 """
 
 import os
+import sys
 import argparse
 import numpy as np
 
-from ..cnnLib import cnn
-from ..cnnLib import configuration as conf
-from ..cnnLib import pmapping as pmap
-from ..cnnLib.utils import get_freer_gpu
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from cnnLib import cnn
+from cnnLib import configuration as conf
+from cnnLib import pmapping as pmap
+from cnnLib.utils import get_freer_gpu
 
 
 if __name__ == '__main__':
