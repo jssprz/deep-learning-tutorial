@@ -10,15 +10,15 @@ For more details see cnnLib.cnn
 
 """
 
-import argparse
-import sys
 import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-import cnnLib.cnn as cnn
-import cnnLib.configuration as conf
-import cnnLib.pmapping as pmap
+import argparse
 import numpy as np
+
+from ..cnnLib import cnn
+from ..cnnLib import configuration as conf
+from ..cnnLib import pmapping as pmap
+from ..cnnLib.utils import get_freer_gpu
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training / testing x models")
@@ -39,7 +39,11 @@ if __name__ == '__main__':
     configuration.show()
 
     # it is also possible to define the id of the device
-    device_name = "/cpu:0" if pargs.device is None else "/" + pargs.device + ":0"
+    if pargs.device == 'gpu':
+        freer_gpu_id = get_freer_gpu()
+        device_name = '/gpu:{}'.format(freer_gpu_id)
+    else:
+        device_name = "/cpu:0"
 
     params = {'device': device_name, 'modelname': pargs.name}
 
