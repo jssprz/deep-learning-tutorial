@@ -24,8 +24,8 @@ from cnnLib.utils import get_freer_gpu
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training / testing x models")
-    parser.add_argument("-mode", type=str, choices=['test', 'train', 'predict', 'save'], help=" test | train ",
-                        required=True)
+    parser.add_argument("-mode", type=str, choices=['test', 'train', 'predict', 'conf-mat', 'save'],
+                        help=" train | test | predict | conf-mat | save ", required=True)
     parser.add_argument("-device", type=str, choices=['cpu', 'gpu'], help=" cpu | gpu ", required=False)
     parser.add_argument("-name", type=str, help=" name of section in the configuration file", required=True)
     parser.add_argument("-config", type=str, default='config.ini', help=" <optional>, a configuration file", required=False)
@@ -60,6 +60,8 @@ if __name__ == '__main__':
         my_cnn.train()
     elif run_mode == 'test':
         my_cnn.test()
+    elif run_mode == 'conf-mat':
+        my_cnn.confusion_matrix_for_test()
     elif run_mode == 'predict':
         print(pargs.image)
         assert os.path.exists(pargs.image), "-image is required"
