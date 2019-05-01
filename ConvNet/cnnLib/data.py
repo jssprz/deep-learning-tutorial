@@ -224,7 +224,7 @@ def createTFRecord(str_path, id_type, im_size, number_of_channels, processFun):
         print("mean_file saved at {}.".format(mean_file))
         # -------------- creating test data
     if (id_type + 1) & 2:  # test ( 1 + 1 ) & 2  == 2
-        filenames, labels = readDataFromTextFile(str_path, dataset="test", shuf=True)
+        filenames, labels = readDataFromTextFile(str_path, dataset="test", shuf=False)
         tfr_filename = os.path.join(str_path, "test.tfrecords")
         createTFRecordFromList(filenames, labels, image_shape, processFun, tfr_filename)
         print("test_record saved at {}.".format(tfr_filename))
