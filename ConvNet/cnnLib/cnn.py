@@ -173,8 +173,9 @@ class CNN:
                 summary_writer.add_summary(abs_img_summary)
                 summary_writer.add_summary(norm_img_summary)
             else:
-                for checkpoint_iter in range(0, self.configuration.number_of_iterations + 1,
-                                             self.configuration.save_checkpoints_steps):
+                checkpoints_iters = sorted([int(x[12:-6]) for x in filter(lambda s: '.index' in s,
+                                                                    os.listdir(self.configuration.snapshot_dir))])
+                for checkpoint_iter in checkpoints_iters:
                     result = list(classifier.predict(
                         input_fn=lambda: data.input_fn(self.filename_test, self.image_shape, self.mean_img, False,
                                                        self.configuration),
