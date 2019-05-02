@@ -66,7 +66,8 @@ class CNN:
                                                         'model_dir': self.configuration.snapshot_dir,
                                                         'ckpt': self.ckpt_file,
                                                         'arch': self.configuration.arch,
-                                                        'optimizer': self.configuration.optimizer
+                                                        'optimizer': self.configuration.optimizer,
+                                                        'batch_size': self.configuration.batch_size
                                                         }
                                                 )
             #
@@ -174,7 +175,7 @@ class CNN:
                 summary_writer.add_summary(norm_img_summary)
             else:
                 checkpoints_iters = sorted([int(x[11:-6]) for x in filter(lambda s: '.index' in s,
-                                                                    os.listdir(self.configuration.snapshot_dir))])
+                                                                          os.listdir(self.configuration.snapshot_dir))])
                 for checkpoint_iter in checkpoints_iters:
                     result = list(classifier.predict(
                         input_fn=lambda: data.input_fn(self.filename_test, self.image_shape, self.mean_img, False,
