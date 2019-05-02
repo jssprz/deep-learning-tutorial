@@ -22,14 +22,14 @@ def mnistnet_fn(features, input_shape, n_classes, n_channels, is_training=True):
         # reshape input to fit a  4D tensor
         x_tensor = tf.reshape(features, [-1, input_shape[0], input_shape[1], n_channels])
 
-        conv_1 = layers.conv_layer(x_tensor, shape=[3, 3, n_channels, 16], stride=1, name='conv_1',
+        conv_1 = layers.conv_layer(x_tensor, shape=[3, 3, n_channels, 32], stride=1, name='conv_1',
                                    is_training=is_training)  # 256
         print(" conv_1: {} ".format(conv_1.get_shape().as_list()))
 
         pool_1 = layers.max_pool_layer(conv_1, 3, 2)  # 14x14
         print(" pool_1: {} ".format(pool_1.get_shape().as_list()))
 
-        conv_2 = layers.conv_layer(conv_1, shape=[3, 3, 16, 32], name='conv_2', is_training=is_training)
+        conv_2 = layers.conv_layer(conv_1, shape=[3, 3, 32, 64], name='conv_2', is_training=is_training)
         print(" conv_2: {} ".format(conv_2.get_shape().as_list()))
 
         pool_2 = layers.max_pool_layer(conv_2, 3, 2)  # 7x7
