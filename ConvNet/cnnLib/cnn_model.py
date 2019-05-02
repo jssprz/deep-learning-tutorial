@@ -8,7 +8,7 @@ This module contains the model specifications
 """
 import os
 import tensorflow as tf
-from official.resnet import cifar10_main
+# from official.resnet import cifar10_main
 from . import cnn_arch as arch
 
 
