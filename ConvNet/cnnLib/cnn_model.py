@@ -58,17 +58,17 @@ def model_fn(features, labels, mode, params):
     if params['arch'] == 'MNIST':
         net = arch.mnistnet_fn(features, params['image_shape'], params['number_of_classes'],
                                params['number_of_channels'], is_training)
-    elif params['arch'] == 'CIFAR10-RESNET':
-        net = cifar10_main.cifar10_model_fn(
-                    features, labels, mode, {
-                        'dtype': tf.float32,
-                        'resnet_size': 32,
-                        'data_format': 'channels_last',
-                        'batch_size': params['batch_size'],
-                        'resnet_version': 1,
-                        'loss_scale': 1,
-                        'fine_tune': False,
-                    })
+    # elif params['arch'] == 'CIFAR10-RESNET':
+    #     net = cifar10_main.cifar10_model_fn(
+    #                 features, labels, mode, {
+    #                     'dtype': tf.float32,
+    #                     'resnet_size': 32,
+    #                     'data_format': 'channels_last',
+    #                     'batch_size': params['batch_size'],
+    #                     'resnet_version': 1,
+    #                     'loss_scale': 1,
+    #                     'fine_tune': False,
+    #                 })
     else:
         raise ValueError("network architecture is unknown")
 
