@@ -46,7 +46,7 @@ class ConfigurationFile:
             self.__lr = float(section['LEARNING_RATE'])
             if 'LR_DECAY' in section:
                 self.__lr_decay = section['LR_DECAY']
-                self.__lr_decay_steps = section['DECAY_STEPS']
+                self.__lr_decay_steps = float(section['DECAY_STEPS'])
 
             self.__estimated_number_of_batches = int(float(self.__dataset_size) / float(self.__batch_size))
             self.__estimated_number_of_batches_test = int(float(self.__test_size) / float(self.__batch_size))
