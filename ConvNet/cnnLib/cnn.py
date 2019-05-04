@@ -69,6 +69,7 @@ class CNN:
                                                         'optimizer': self.configuration.optimizer,
                                                         'batch_size': self.configuration.batch_size,
                                                         'lr_decay': self.configuration.lr_decay,
+                                                        'lr_decay_steps': self.configuration.lr_decay_steps
                                                         }
                                                 )
             #

@@ -129,8 +129,14 @@ def model_fn(features, labels, mode, params):
             with tf.control_dependencies(update_ops):
                 if params['lr_decay'] == 'exponential':
                     lr = tf.train.exponential_decay(learning_rate=params['learning_rate'],
-                                                    global_step=tf.train.get_global_step(), decay_steps=1000,
-                                                    decay_rate=0.96, staricase=True)
+                                                    global_step=tf.train.get_global_step(),
+                                                    decay_steps=params['lr_decay_steps'],
+                                                    decay_rate=0.96, staircase=True)
+                elif params['lr_decay'] == 'polynomial':
+                    end_lr = params['learning_rate'] / 10
+                    lr = tf.train.polynomial_decay(learning_rate=params['learning_rate'],
+                                                   global_step=tf.train.get_global_step(),
+                                                   decay_steps=params['lr_decay_steps'], end_learning_rate=end_lr)
                 else:
                     lr = params['learning_rate']
 

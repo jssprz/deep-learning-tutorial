@@ -42,8 +42,12 @@ class ConfigurationFile:
             self.__batch_size = int(section['BATCH_SIZE'])
             self.__save_checkpoints_steps = int(section['SAVE_CHECKPOINTS_STEPS'])
             self.__test_time = int(section['TEST_TIME'])
+
             self.__lr = float(section['LEARNING_RATE'])
-            self.__lr_decay = section['LR_DECAY']
+            if 'LR_DECAY' in section:
+                self.__lr_decay = section['LR_DECAY']
+                self.__lr_decay_steps = section['DECAY_STEPS']
+
             self.__estimated_number_of_batches = int(float(self.__dataset_size) / float(self.__batch_size))
             self.__estimated_number_of_batches_test = int(float(self.__test_size) / float(self.__batch_size))
             self.__number_of_epochs = int(float(self.__number_of_iterations) / float(self.__estimated_number_of_batches))
@@ -121,6 +125,10 @@ class ConfigurationFile:
     @property
     def lr_decay(self):
         return self.__lr_decay
+
+    @property
+    def lr_decay_steps(self):
+        return self.__lr_decay_steps
 
     @property
     def optimizer(self):
