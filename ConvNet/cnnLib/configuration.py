@@ -118,6 +118,7 @@ class ConfigurationFile:
     def learning_rate(self):
         return self.__lr
 
+    @property
     def lr_decay(self):
         return self.__lr_decay
 
