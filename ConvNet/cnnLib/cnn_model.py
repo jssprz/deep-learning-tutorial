@@ -127,11 +127,19 @@ def model_fn(features, labels, mode, params):
             update_ops = tf.get_collection(
                 tf.GraphKeys.UPDATE_OPS)  # to allow update [is_training variable] used by batch_normalization
             with tf.control_dependencies(update_ops):
+                if params['lr_decay'] == 'exponential':
+                    lr = tf.train.exponential_decay(learning_rate=params['learning_rate'],
+                                                    global_step=tf.train.get_global_step(), decay_steps=1000,
+                                                    decay_rate=0.96, staricase=True)
+                else:
+                    lr = params['learning_rate']
+
+                tf.summary.scalar('learning_rate', lr)
+
                 if params['optimizer'] == 'gd':
-                    optimizer = tf.train.GradientDescentOptimizer(learning_rate=params['learning_rate'])
+                    optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr)
                 elif params['optimizer'] == 'momentum':
-                    optimizer = tf.train.MomentumOptimizer(learning_rate=params['learning_rate'],
-                                                           momentum=params['opt_param'])
+                    optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=params['opt_param'])
                 elif params['optimizer'] == 'adagrad':
                     optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'])
                 elif params['optimizer'] == 'rmsprop':
@@ -139,7 +147,7 @@ def model_fn(features, labels, mode, params):
                 else:
                     optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
 
-                train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
+                train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
 
             return tf.estimator.EstimatorSpec(
                 mode=mode,

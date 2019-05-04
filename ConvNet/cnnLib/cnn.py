@@ -67,7 +67,8 @@ class CNN:
                                                         'ckpt': self.ckpt_file,
                                                         'arch': self.configuration.arch,
                                                         'optimizer': self.configuration.optimizer,
-                                                        'batch_size': self.configuration.batch_size
+                                                        'batch_size': self.configuration.batch_size,
+                                                        'lr_decay': self.configuration.lr_decay,
                                                         }
                                                 )
             #
