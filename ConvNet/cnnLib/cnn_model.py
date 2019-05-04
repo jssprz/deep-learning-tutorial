@@ -130,7 +130,7 @@ def model_fn(features, labels, mode, params):
                 if params['lr_decay'] == 'exponential':
                     lr = tf.train.exponential_decay(learning_rate=params['learning_rate'],
                                                     global_step=tf.train.get_global_step(), decay_steps=1000,
-                                                    decay_rate=0.96, staricase=True)
+                                                    decay_rate=0.96, staircase=True)
                 else:
                     lr = params['learning_rate']
 
