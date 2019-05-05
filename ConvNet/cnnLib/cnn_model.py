@@ -63,7 +63,7 @@ def model_fn(features, labels, mode, params):
                                 params['number_of_channels'], is_training)
     elif params['arch'] == 'SIMPLE_VGG':
         net = arch.simple_vgg_net_fn(features, params['image_shape'], params['number_of_classes'],
-                                     params['number_of_channels', is_training])
+                                     params['number_of_channels'], is_training)
     # elif params['arch'] == 'CIFAR10-RESNET':
     #     net = cifar10_main.cifar10_model_fn(
     #                 features, labels, mode, {
