@@ -38,7 +38,7 @@ if __name__ == '__main__':
     pargs = parser.parse_args()
 
     configuration = conf.ConfigurationFile(pargs.config, pargs.name)
-    configuration.show()
+    print(configuration)
 
     # it is also possible to define the id of the device
     if pargs.device == 'gpu':
