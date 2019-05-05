@@ -32,7 +32,7 @@ class ConfigurationFile:
             self.__process_fun = 'default'
             self.__data_dir = section['DATA_DIR']
             self.__optimizer = section['OPTIMIZER']
-            if 'PROCESS_FUN' in section is not None:
+            if 'PROCESS_FUN' in section:
                 self.__process_fun = section['PROCESS_FUN']
 
             self.__number_of_classes = int(section['NUM_CLASSES'])
@@ -46,7 +46,7 @@ class ConfigurationFile:
             self.__lr = float(section['LEARNING_RATE'])
             if 'LR_DECAY' in section:
                 self.__lr_decay = section['LR_DECAY']
-                self.__lr_decay_steps = float(section['DECAY_STEPS'])
+                self.__lr_decay_steps = float(section['DECAY_STEPS']) if 'DECAY_STEPS' in section else 10000
 
             self.__estimated_number_of_batches = int(float(self.__dataset_size) / float(self.__batch_size))
             self.__estimated_number_of_batches_test = int(float(self.__test_size) / float(self.__batch_size))
@@ -54,7 +54,7 @@ class ConfigurationFile:
             self.__channels = int(section['CHANNELS'])
             self.__class_labels = section['CLASS_LABELS'].split(',')
 
-            assert (self.__channels == 1 or self.__channels == 3), 'The number of channels must be 1 or 3'
+            assert self.__channels in [1, 3], 'The number of channels must be 1 or 3'
         except Exception:
             raise ValueError("something wrong with configuration file " + config_path)
 

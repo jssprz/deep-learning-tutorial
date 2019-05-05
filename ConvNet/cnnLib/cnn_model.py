@@ -58,6 +58,9 @@ def model_fn(features, labels, mode, params):
     if params['arch'] == 'MNIST':
         net = arch.mnistnet_fn(features, params['image_shape'], params['number_of_classes'],
                                params['number_of_channels'], is_training)
+    elif params['arch'] == 'VGG16':
+        net = arch.vgg16_net_fn(features, params['image_shape'], params['number_of_classes'],
+                                params['number_of_channels'], is_training)
     # elif params['arch'] == 'CIFAR10-RESNET':
     #     net = cifar10_main.cifar10_model_fn(
     #                 features, labels, mode, {
