@@ -97,7 +97,7 @@ def loadImage(np_image, number_of_channels):
         number_of_channels_in = np_image.shape[2]
     assert (number_of_channels_in in [1, 3])
     image = np_image
-    if (number_of_channels != number_of_channels_in):
+    if number_of_channels != number_of_channels_in:
         if number_of_channels == 1:
             image = color.rgb2gray(image)
             assert (len(image.shape) == 2)
@@ -113,13 +113,13 @@ def readImage(filename, number_of_channels):
     """ readImage using skimage """
     if number_of_channels == 1:
         # image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-        image = io.imread(filename, as_grey=True)
+        image = io.imread(filename, as_gray=True)
         image = utils.toUINT8(image)
         assert (len(image.shape) == 2)
     elif number_of_channels == 3:
         # image = cv2.imread(filename)
         image = io.imread(filename)
-        if (len(image.shape) == 2):
+        if len(image.shape) == 2:
             image = color.gray2rgb(image)
         image = utils.toUINT8(image)
         assert (len(image.shape) == 3)
