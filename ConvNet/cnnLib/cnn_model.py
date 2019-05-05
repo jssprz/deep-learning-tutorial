@@ -153,11 +153,11 @@ def model_fn(features, labels, mode, params):
                 elif params['optimizer'] == 'momentum':
                     optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=params['opt_param'])
                 elif params['optimizer'] == 'adagrad':
-                    optimizer = tf.train.AdagradOptimizer(learning_rate=params['learning_rate'])
+                    optimizer = tf.train.AdagradOptimizer(learning_rate=lr)
                 elif params['optimizer'] == 'rmsprop':
-                    optimizer = tf.train.RMSPropOptimizer(learning_rate=params['learning_rate'])
+                    optimizer = tf.train.RMSPropOptimizer(learning_rate=lr)
                 else:
-                    optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+                    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
                 train_op = optimizer.minimize(loss=loss, global_step=tf.train.get_global_step())
 
