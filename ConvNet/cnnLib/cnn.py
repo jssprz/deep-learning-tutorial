@@ -88,7 +88,9 @@ class CNN:
                                                                              is_training=False,
                                                                              configuration=self.configuration),
                                               throttle_secs=1)
-            #
+
+            tf.summary.text('model-hyper-parameters', str(self.configuration))
+
             tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
 
     def test(self):

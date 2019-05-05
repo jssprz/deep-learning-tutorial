@@ -141,12 +141,13 @@ class ConfigurationFile:
     def is_a_valid_section(self, section_name):
         return section_name in self.__config.sections()
 
-    def show(self):
-        print("ARCH: {}".format(self.arch))
-        print("NUM_ITERATIONS: {}".format(self.number_of_iterations))
-        print("DATASET_SIZE: {}".format(self.dataset_size))
-        print("LEARNING_RATE: {}".format(self.learning_rate))
-        print("NUMBER_OF_BATCHES: {}".format(self.number_of_batches))
-        print("NUMBER OF EPOCHS: {}".format(self.__number_of_epochs))
-        print("SNAPSHOT_DIR: {}".format(self.snapshot_dir))
-        print("DATA_DIR: {}".format(self.data_dir))
+    def __str__(self):
+        return 'ARCH: {}\n' \
+               'NUM_ITERATIONS: {}\n' \
+               'DATASET_SIZE: {}\n' \
+               'LEARNING_RATE: {}\n' \
+               'NUMBER_OF_BATCHES: {}\n' \
+               'NUMBER OF EPOCHS: {}\n' \
+               'SNAPSHOT_DIR: {}\n' \
+               'DATA_DIR: {}'.format(self.arch, self.number_of_iterations, self.dataset_size, self.learning_rate,
+                                     self.number_of_batches, self.number_of_epochs, self.snapshot_dir, self.data_dir)
