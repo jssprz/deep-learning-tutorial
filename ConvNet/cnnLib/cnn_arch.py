@@ -99,6 +99,60 @@ def simple_vgg_net_fn(features, input_shape, n_classes, n_channels, is_training=
     return {"output": fc3}
 
 
+def simple_vgg2_net_fn(features, input_shape, n_classes, n_channels, is_training=True):
+    with tf.variable_scope("net_scope"):
+        # reshape input to fit a  4D tensor
+        x_tensor = tf.reshape(features, [-1, input_shape[0], input_shape[1], n_channels])
+
+        # 64-channels block
+        conv_1 = layers.conv_layer(x_tensor, shape=[3, 3, n_channels, 64], stride=1, name='conv1-3-64',
+                                   is_training=is_training)
+        print(" conv_1: {} ".format(conv_1.get_shape().as_list()))
+
+        # conv_2 = layers.conv_layer(conv_1, shape=[3, 3, 64, 64], stride=1, name='conv2-3-64',
+        #                            is_training=is_training)
+        # print(" conv_2: {} ".format(conv_2.get_shape().as_list()))
+
+        pool_1 = layers.max_pool_layer(conv_1, 3, 2)
+        print(" pool_1: {} ".format(pool_1.get_shape().as_list()))
+
+        # 128-channels block
+        conv_3 = layers.conv_layer(pool_1, shape=[3, 3, 64, 128], stride=1, name='conv3-3-128',
+                                   is_training=is_training)
+        print(" conv_3: {} ".format(conv_3.get_shape().as_list()))
+
+        # conv_4 = layers.conv_layer(conv_3, shape=[3, 3, 128, 128], stride=1, name='conv4-3-128',
+        #                            is_training=is_training)
+        # print(" conv_4: {} ".format(conv_4.get_shape().as_list()))
+
+        pool_2 = layers.max_pool_layer(conv_3, 3, 2)
+        print(" pool_2: {} ".format(pool_2.get_shape().as_list()))
+
+        # 256-channels block
+        conv_5 = layers.conv_layer(pool_2, shape=[3, 3, 128, 256], stride=1, name='conv5-3-256',
+                                   is_training=is_training)
+        print(" conv_5: {} ".format(conv_5.get_shape().as_list()))
+
+        # conv_6 = layers.conv_layer(conv_5, shape=[3, 3, 256, 256], stride=1, name='conv6-3-256',
+        #                            is_training=is_training)
+        # print(" conv_6: {} ".format(conv_6.get_shape().as_list()))
+
+        pool_3 = layers.max_pool_layer(conv_5, 3, 2)
+        print(" pool_3: {} ".format(pool_3.get_shape().as_list()))
+
+        # fully-connected layers block
+        fc1 = layers.fc_layer(pool_3, 1024, name='fc1-1024')
+        print(" fc1: {} ".format(fc1.get_shape().as_list()))
+        fc2 = layers.fc_layer(fc1, 1024, name='fc2-1024')
+        print(" fc2: {} ".format(fc2.get_shape().as_list()))
+
+    with tf.variable_scope("class_layer"):
+        fc3 = layers.fc_layer(fc2, n_classes, name='fc3-{}'.format(n_channels), use_relu=False)
+        print(" fc3: {} ".format(fc3.get_shape().as_list()))
+
+    return {"output": fc3}
+
+
 def vgg16_net_fn(features, input_shape, n_classes, n_channels, is_training=True):
     with tf.variable_scope("net_scope"):
         # reshape input to fit a  4D tensor
