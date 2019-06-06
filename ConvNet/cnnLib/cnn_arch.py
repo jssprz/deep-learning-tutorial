@@ -35,14 +35,14 @@ def mnistnet_fn(features, input_shape, n_classes, n_channels, is_training=True):
         pool_2 = layers.max_pool_layer(conv_2, 3, 2)  # 7x7
         print(" pool_2: {} ".format(pool_2.get_shape().as_list()))
 
-        fc3 = layers.fc_layer(pool_2, 256, name='fc3')
-        print(" fc3: {} ".format(fc3.get_shape().as_list()))
+        fc1 = layers.fc_layer(pool_2, 256, name='fc3')
+        print(" fc1: {} ".format(fc1.get_shape().as_list()))
 
     with tf.variable_scope("class_layer"):
-        fc4 = layers.fc_layer(fc3, n_classes, name='fc4', use_relu=False)
-        print(" fc4: {} ".format(fc4.get_shape().as_list()))
+        fc2 = layers.fc_layer(fc1, n_classes, name='fc4', use_relu=False)
+        print(" fc2: {} ".format(fc2.get_shape().as_list()))
 
-    return {"output": fc4}
+    return {'output': fc2, 'fc1': fc1}
 
 
 def simple_vgg_net_fn(features, input_shape, n_classes, n_channels, is_training=True):
@@ -96,7 +96,7 @@ def simple_vgg_net_fn(features, input_shape, n_classes, n_channels, is_training=
         fc3 = layers.fc_layer(fc2, n_classes, name='fc3-{}'.format(n_channels), use_relu=False)
         print(" fc3: {} ".format(fc3.get_shape().as_list()))
 
-    return {"output": fc3}
+    return {'output': fc3, 'fc1': fc1, 'fc2': fc2}
 
 
 def simple_vgg2_net_fn(features, input_shape, n_classes, n_channels, is_training=True):
@@ -150,7 +150,7 @@ def simple_vgg2_net_fn(features, input_shape, n_classes, n_channels, is_training
         fc3 = layers.fc_layer(fc2, n_classes, name='fc3-{}'.format(n_channels), use_relu=False)
         print(" fc3: {} ".format(fc3.get_shape().as_list()))
 
-    return {"output": fc3}
+    return {'output': fc3, 'fc1': fc1, 'fc2': fc2}
 
 
 def vgg16_net_fn(features, input_shape, n_classes, n_channels, is_training=True):
@@ -240,4 +240,4 @@ def vgg16_net_fn(features, input_shape, n_classes, n_channels, is_training=True)
         fc3 = layers.fc_layer(fc2, n_classes, name='fc3-{}'.format(n_channels), use_relu=False)
         print(" fc3: {} ".format(fc3.get_shape().as_list()))
 
-    return {"output": fc3}
+    return {'output': fc3, 'fc1': fc1, 'fc2': fc2}

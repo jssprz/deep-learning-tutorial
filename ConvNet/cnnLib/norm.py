@@ -11,15 +11,14 @@ import numpy as np
 
 
 # square root normalization
-def squareRootNorm(data):
+def square_root_norm(data):
     # square_root
-    # add 1 to avoit division by zero
+    # add 1 to avoid division by zero
     sign_minus = data < 0
     data_abs = np.abs(data)
     data_sqrt = np.sqrt(data_abs)
     data_sqrt[sign_minus] = data_sqrt[sign_minus] * -1
 
-    #
     if len(data.shape) > 1:
         dim = data.shape[1]
         norm2 = np.sqrt(np.sum(np.square(data_sqrt), axis=1))
@@ -41,6 +40,6 @@ if __name__ == '__main__':
     a = np.array([[1, 2, 3], [2, 10, 6]])
     nn = np.sqrt(np.sum(a ** 2))
     print(nn)
-    b = squareRootNorm(a)
+    b = square_root_norm(a)
     print(a)
     print(b)

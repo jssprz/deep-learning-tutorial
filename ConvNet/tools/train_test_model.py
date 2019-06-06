@@ -74,7 +74,7 @@ if __name__ == '__main__':
         mapping_file = os.path.join(configuration.data_dir(), "mapping.txt")
         if os.path.exists(mapping_file):
             class_mapping = pmap.PMapping(mapping_file)
-            print("Predicted class [{}]".format(class_mapping.getClassName(idx_class)))
+            print("Predicted class [{}]".format(class_mapping.get_class_name(idx_class)))
         else:
             print("Predicted class [{}]".format(idx_class))
     elif run_mode == 'save':

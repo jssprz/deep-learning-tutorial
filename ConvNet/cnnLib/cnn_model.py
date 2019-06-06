@@ -37,6 +37,23 @@ def eval_confusion_matrix(labels, predictions, num_classes):
     return tf.convert_to_tensor(con_matrix_sum), update_op
 
 
+def initialize_net(features, params, is_training):
+    if params['arch'] == 'MNIST':
+        return arch.mnistnet_fn(features, params['image_shape'], params['number_of_classes'],
+                               params['number_of_channels'], is_training)
+    elif params['arch'] == 'VGG16':
+        return arch.vgg16_net_fn(features, params['image_shape'], params['number_of_classes'],
+                                params['number_of_channels'], is_training)
+    elif params['arch'] == 'SIMPLE_VGG':
+        return arch.simple_vgg_net_fn(features, params['image_shape'], params['number_of_classes'],
+                                     params['number_of_channels'], is_training)
+    elif params['arch'] == 'SIMPLE_VGG2':
+        return arch.simple_vgg2_net_fn(features, params['image_shape'], params['number_of_classes'],
+                                      params['number_of_channels'], is_training)
+    else:
+        raise ValueError("network architecture is unknown")
+
+
 def model_fn(features, labels, mode, params):
     """Defines a model that feeds the Estimator
     The signature here is standard according to Estimators.
@@ -55,31 +72,7 @@ def model_fn(features, labels, mode, params):
     else:
         is_training = False
 
-    if params['arch'] == 'MNIST':
-        net = arch.mnistnet_fn(features, params['image_shape'], params['number_of_classes'],
-                               params['number_of_channels'], is_training)
-    elif params['arch'] == 'VGG16':
-        net = arch.vgg16_net_fn(features, params['image_shape'], params['number_of_classes'],
-                                params['number_of_channels'], is_training)
-    elif params['arch'] == 'SIMPLE_VGG':
-        net = arch.simple_vgg_net_fn(features, params['image_shape'], params['number_of_classes'],
-                                     params['number_of_channels'], is_training)
-    elif params['arch'] == 'SIMPLE_VGG2':
-        net = arch.simple_vgg2_net_fn(features, params['image_shape'], params['number_of_classes'],
-                                      params['number_of_channels'], is_training)
-    # elif params['arch'] == 'CIFAR10-RESNET':
-    #     net = cifar10_main.cifar10_model_fn(
-    #                 features, labels, mode, {
-    #                     'dtype': tf.float32,
-    #                     'resnet_size': 32,
-    #                     'data_format': 'channels_last',
-    #                     'batch_size': params['batch_size'],
-    #                     'resnet_version': 1,
-    #                     'loss_scale': 1,
-    #                     'fine_tune': False,
-    #                 })
-    else:
-        raise ValueError("network architecture is unknown")
+    net = initialize_net(features, params, is_training)
 
     logits = net["output"]
 
@@ -90,7 +83,7 @@ def model_fn(features, labels, mode, params):
             mode=mode,
             predictions={'class_ids': idx_predicted_class[:, tf.newaxis],
                          'probabilities': tf.nn.softmax(logits),
-                         'logits': logits})
+                         'logits': logits, 'deep_features': net[params['feats_layer']]})
     else:
         # Define loss - e.g. cross_entropy - mean(cross_entropy x batch)
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)

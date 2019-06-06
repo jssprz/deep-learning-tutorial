@@ -8,7 +8,6 @@ A faster predictor loading a model previously saved
 
 from tensorflow.contrib import predictor
 import tensorflow as tf
-from . import configuration as conf
 from . import imgproc
 from . import pmapping as pmap
 import numpy as np
@@ -18,44 +17,41 @@ import os
 
 class FastPredictor:
 
-    def __init__(self, str_config, params):
-        # reading configuration file
-        self.configuration = conf.ConfigurationFile(str_config, params['modelname'])
-        self.modelname = self.configuration.model_name()
-        self.processFun = imgproc.getProcessFun(self.configuration.process_fun())
+    def __init__(self, configuration, params):
+        self.device = params['device']
+        self.configuration = configuration
+        self.modelname = self.configuration.model_name
+        self.processFun = imgproc.getProcessFun(self.configuration.process_fun)
         # snapShotDir must exist
-        assert os.path.exists(self.configuration.snapshot_dir()), "Path {} does not exist".format(
-            self.configuration.snapshot_dir())
+        assert os.path.exists(self.configuration.snapshot_dir), "Path {} does not exist".format(
+            self.configuration.snapshot_dir)
         # loading mean.dat and metadata.dat
-        filename_mean = os.path.join(self.configuration.data_dir(), "mean.dat")
-        metadata_file = os.path.join(self.configuration.data_dir(), "metadata.dat")
+        filename_mean = os.path.join(self.configuration.data_dir, "mean.dat")
+        metadata_file = os.path.join(self.configuration.data_dir, "metadata.dat")
         # reading metadata
         self.image_shape = np.fromfile(metadata_file, dtype=np.int32)
-        #         
         print("image shape: {}".format(self.image_shape))
         # load mean
         mean_img = np.fromfile(filename_mean, dtype=np.float32)
         self.mean_img = np.reshape(mean_img, self.image_shape.tolist())
         # defining files for training and test
         # loading model
-        self.predictor = predictor.from_saved_model(os.path.join(self.configuration.data_dir(), "cnn-model"))
+        self.predictor = predictor.from_saved_model(os.path.join(self.configuration.data_dir, "cnn-model"))
         print("predictor loaded OK")
-        mapping_file = os.path.join(self.configuration.data_dir(), "mapping.txt")
+        mapping_file = os.path.join(self.configuration.data_dir, "mapping.txt")
         self.mapping = False
         if os.path.exists(mapping_file):
             self.class_mapping = pmap.PMapping(mapping_file)
             self.mapping = True
 
-        self.device = params['device']
-
-    def getDeepFeatures(self, filename):
+    def get_deep_features(self, filename):
         with tf.device(self.device):
             input_image = data.input_fn_for_prediction(filename,
                                                        self.image_shape,
                                                        self.mean_img,
-                                                       self.configuration.number_of_channels(),
+                                                       self.configuration.number_of_channels,
                                                        self.processFun)
-            predictions = self.predictor({"input": input_image})
+            predictions = self.predictor({'input': input_image})
             features = predictions['deep_features'][0]
             return features
 
@@ -67,13 +63,13 @@ class FastPredictor:
             input_image = data.input_fn_for_prediction(input_im,
                                                        self.image_shape,
                                                        self.mean_img,
-                                                       self.configuration.number_of_channels(),
+                                                       self.configuration.number_of_channels,
                                                        self.processFun)
 
             predictions = self.predictor({"input": input_image})
             predictions = predictions['predicted_probabilities'][0]
             if self.mapping:
-                names = [self.class_mapping.getClassName(item) for item in np.arange(len(predictions))]
+                names = [self.class_mapping.get_class_name(item) for item in np.arange(len(predictions))]
             else:
                 names = [item for item in np.arange(len(predictions))]
             idx_sorted = np.flip(np.argsort(predictions), 0)
@@ -86,13 +82,13 @@ class FastPredictor:
             input_image = data.input_fn_for_prediction_on_list(list_of_images,
                                                                self.image_shape,
                                                                self.mean_img,
-                                                               self.configuration.number_of_channels(),
+                                                               self.configuration.number_of_channels,
                                                                self.processFun)
 
             predictions = self.predictor({"input": input_image})
             predictions = predictions['predicted_probabilities']
             if self.mapping:
-                names = [self.class_mapping.getClassName(item) for item in np.arange(predictions.shape[1])]
+                names = [self.class_mapping.get_class_name(item) for item in np.arange(predictions.shape[1])]
             else:
                 names = [item for item in np.arange(predictions.shape[1])]
             idx_sorted = np.fliplr(np.argsort(predictions))

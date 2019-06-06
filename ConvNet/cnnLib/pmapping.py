@@ -18,9 +18,9 @@ class PMapping:
         constructor
         """
         self.mapping_dict = {}
-        self.loadMapping(mapping_file)
+        self.load_mapping(mapping_file)
 
-    def loadMapping(self, mapping_file):
+    def load_mapping(self, mapping_file):
         """
         load mapping file for prediction
         """
@@ -32,13 +32,13 @@ class PMapping:
                 sline = line.split('\t')
                 self.mapping_dict[int(sline[1])] = sline[0]
 
-    def getClassName(self, class_code):
+    def get_class_name(self, class_code):
         """
         return the class name of a prdicted class, given the class code
         """
         return self.mapping_dict[class_code]
 
-    def getClassCode(self, class_name):
+    def get_class_code(self, class_name):
         """
         return the class code of a given class name for a predicted class
         """

@@ -11,7 +11,6 @@ This implements basic operations on a cnn
 import os
 import numpy as np
 import tensorflow as tf
-from . import configuration as conf
 from . import cnn_model as model
 from . import data as data
 from . import imgproc
@@ -19,16 +18,15 @@ from . import confusion_matrix as cm
 
 
 class CNN:
-    def __init__(self, str_config, params):
+    def __init__(self, configuration, params):
         self.initFromCkpt = False
         self.ckpt_file = None
         if 'ckpt' in params:
             self.initFromCkpt = True
             self.ckpt_file = params['ckpt']
-        # reading configuration file
-        self.configuration = conf.ConfigurationFile(str_config, params['modelname'])
-        self.modelname = self.configuration.model_name
         self.device = params['device']
+        self.configuration = configuration
+        self.modelname = self.configuration.model_name
         self.processFun = imgproc.getProcessFun(self.configuration.process_fun)
         # validatitn snapShotDir
         assert os.path.exists(self.configuration.snapshot_dir), "Path {} does not exist".format(

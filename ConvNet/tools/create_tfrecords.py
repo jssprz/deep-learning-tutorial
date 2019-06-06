@@ -27,7 +27,7 @@ if __name__ == '__main__':
     pargs = parser.parse_args()
     imh = pargs.imheight
     imw = pargs.imheight
-    if not pargs.imwidth is None:
+    if pargs.imwidth is not None:
         imw = pargs.imwidth
 
     configuration_file = pargs.config
