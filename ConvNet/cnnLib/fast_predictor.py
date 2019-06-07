@@ -32,11 +32,10 @@ class FastPredictor:
         self.image_shape = np.fromfile(metadata_file, dtype=np.int32)
         print("image shape: {}".format(self.image_shape))
         # load mean
-        mean_img = np.fromfile(filename_mean, dtype=np.float32)
-        self.mean_img = np.reshape(mean_img, self.image_shape.tolist())
+        self.mean_img = np.reshape(np.fromfile(filename_mean, dtype=np.float32), self.image_shape.tolist())
         # defining files for training and test
         # loading model
-        self.predictor = predictor.from_saved_model(os.path.join(self.configuration.data_dir, "cnn-model"))
+        self.predictor = predictor.from_saved_model(configuration.snapshot_dir)
         print("predictor loaded OK")
         mapping_file = os.path.join(self.configuration.data_dir, "mapping.txt")
         self.mapping = False
