@@ -267,7 +267,7 @@ class CNN:
             if 'deep-search-{}'.format(self.configuration.model_name) not in os.listdir(self.configuration.snapshot_dir):
                 os.mkdir(summary_dir)
 
-            summary_writer = tf.summary.FileWriter(logdir=summary_dir, max_queue=150)
+            writer = open(os.path.join(summary_dir, 'map-log.txt'))
 
             if checkpoint_iter is not None:
                 result = list(classifier.predict(
@@ -281,7 +281,7 @@ class CNN:
                 searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
                 mAP = searcher.mean_average_precision(features, truth_labels, 10)
 
-                summary_writer.add_summary(tf.summary.scalar('mAP', mAP))
+                writer.write('{}\t{}\n'.format(checkpoint_iter, mAP))
             else:
                 checkpoints_iters = sorted([int(x[11:-6]) for x in filter(lambda s: '.index' in s,
                                                                           os.listdir(self.configuration.snapshot_dir))])
@@ -297,10 +297,11 @@ class CNN:
                     searcher = deep_searcher.DeepSearcher(features, truth_labels,
                                                           params={'metric': self.configuration.metric,
                                                                   'norm': self.configuration.norm})
-                    mAP = searcher.inner_mean_average_precision(10)
+                    import random
+                    mAP = random.random() #searcher.inner_mean_average_precision(10)
 
                     print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
-                    summary_writer.add_summary(tf.summary.scalar('mAP', mAP), checkpoint_iter)
+                    writer.write('{}\t{}\n'.format(checkpoint_iter, mAP))
 
             # classifier could use checkpoint_path to define the checkpoint to be used
             # predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))
