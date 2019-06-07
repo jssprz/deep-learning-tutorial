@@ -247,7 +247,8 @@ class CNN:
                                                         'number_of_classes': self.configuration.number_of_classes,
                                                         'image_shape': self.image_shape,
                                                         'number_of_channels': self.configuration.number_of_channels,
-                                                        'arch': self.configuration.arch
+                                                        'arch': self.configuration.arch,
+                                                        'feats_layer': self.configuration.deep_feats_layer
                                                         })
 
             mapping = pmap.PMapping(map_filename)
