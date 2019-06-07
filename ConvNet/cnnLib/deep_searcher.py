@@ -196,14 +196,14 @@ class DeepSearcher:
 
         def worker(id):
             partial_size = int(self.size/threads_count)
-            for i in range(partial_size * (id-1), partial_size * id):
+            for i in range(partial_size * id, partial_size * (id+1)):
                 ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
                 partials_sums[id] += 0 if math.isnan(ap) else ap
                 if i % 1000 == 0:
                     print(ap, partials_sums[id])
 
         for i in range(threads_count):
-            t = threading.Thread(target=worker, args=(i+1,))
+            t = threading.Thread(target=worker, args=(i,))
             threads.append(t)
             t.start()
 
