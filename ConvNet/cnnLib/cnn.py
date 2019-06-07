@@ -294,7 +294,9 @@ class CNN:
 
                     features = [r['deep_features'] for r in result]
 
-                    searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
+                    searcher = deep_searcher.DeepSearcher(features, truth_labels,
+                                                          params={'metric': self.configuration.metric,
+                                                                  'norm': self.configuration.norm})
                     mAP = searcher.inner_mean_average_precision(10)
 
                     print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
