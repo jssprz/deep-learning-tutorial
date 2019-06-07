@@ -26,15 +26,20 @@ from cnnLib.utils import get_freer_gpu
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training / testing x models")
-    parser.add_argument("-mode", type=str, choices=['test', 'train', 'predict', 'conf-mat', 'save'],
-                        help=" train | test | predict | conf-mat | save ", required=True)
+    parser.add_argument("-mode", type=str,
+                        choices=['test', 'train', 'predict', 'fast_predict', 'deep_searcher', 'conf-mat', 'save'],
+                        help=" train | test | predict | fast_predict | deep_searcher | conf-mat | save ", required=True)
     parser.add_argument("-device", type=str, choices=['cpu', 'gpu'], help=" cpu | gpu ", required=False)
     parser.add_argument("-name", type=str, help=" name of section in the configuration file", required=True)
-    parser.add_argument("-config", type=str, default='config.ini', help=" <optional>, a configuration file", required=False)
+    parser.add_argument("-config", type=str, default='config.ini', help=" <optional>, a configuration file",
+                        required=False)
     parser.add_argument("-ckpt", type=str,
                         help=" <optional>, it defines the checkpoint for training<fine tuning> or testing",
                         required=False)
-    parser.add_argument("-image", type=str, help=" <optional>, a filename for an image to be tested in -predict mode-",
+    parser.add_argument("-list", type=str, help=" <optional>, a list of  images for prediction in -fast_predict mode-",
+                        required=False)
+    parser.add_argument("-image", type=str,
+                        help=" <optional>, a filename for an image to be tested in -predict fast_predict modes-",
                         required=False)
 
     pargs = parser.parse_args()
