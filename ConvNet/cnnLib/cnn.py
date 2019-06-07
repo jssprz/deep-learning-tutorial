@@ -40,7 +40,6 @@ class CNN:
         metadata_file = os.path.join(self.configuration.data_dir, "metadata.dat")
         # reading metadata
         self.image_shape = np.fromfile(metadata_file, dtype=np.int32)
-        #
         print("image shape: {}".format(self.image_shape))
         # load mean
         mean_img = np.fromfile(filename_mean, dtype=np.float32)
@@ -253,7 +252,7 @@ class CNN:
 
             mapping = pmap.PMapping(map_filename)
 
-            with open(data_filename, 'r') as file:
+            with open(os.path.join(self.configuration.data_dir, 'test.txt'), 'r') as file:
                 lines = [line.rstrip() for line in file]
                 lines_ = [tuple(line.rstrip().split('\t')) for line in lines]
                 filenames, labels = zip(*lines_)

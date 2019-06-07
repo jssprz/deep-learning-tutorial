@@ -110,7 +110,7 @@ if __name__ == '__main__':
                 while len(filename) == 0:
                     filename = input("Image: ")
     elif run_mode == 'deep_search':
-        data_filename = os.path.join(configuration.data_dir, 'filelist.txt')
+        data_filename = os.path.join(configuration.data_dir, 'test.tfrecords')
         mapping_filename = os.path.join(configuration.data_dir, "mapping.txt")
         my_cnn.deep_search_on_list(data_filename, mapping_filename)
         # deep_searcher = DeepSearcher(configuration, params)

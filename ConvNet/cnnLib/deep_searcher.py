@@ -147,7 +147,7 @@ class DeepSearcher:
         self.metric = params['metric']
         self.norm = JNorm.SQUARE_ROOT_UNIT
         self.feats_vectors = np.array(features)
-        self.true_labels = true_labels
+        self.true_labels = np.array(true_labels)
         self.size = len(features)
 
     def search(self, feats_vec, k, leave_one_out=True):
@@ -161,15 +161,12 @@ class DeepSearcher:
         if k >= len(self.feats_vectors):
             k = -1
 
-        t_start = time.time()
         dist = np.sqrt(np.sum((self.feats_vectors - feats_vec) ** 2, axis=1))
         sorted_idx = sorted(range(self.size), key=lambda x: dist[x])
-        t_elapsed = (time.time() - t_start) * 1000
-        print('>>> search took {} ms'.format(t_elapsed))
 
         s = 1 if leave_one_out else 0
-        return sorted_idx[s:], self.true_labels[sorted_idx[s:]], dist[sorted_idx[s:]] if k == -1 else \
-            sorted_idx[s:k], self.true_labels[sorted_idx[s:k]], dist[sorted_idx[s:k]]
+        return (sorted_idx[s:], self.true_labels[sorted_idx[s:]], dist[sorted_idx[s:]]) if k == -1 else \
+            (sorted_idx[s:k], self.true_labels[sorted_idx[s:k]], dist[sorted_idx[s:k]])
 
     def get_true_label(self, idx):
         """return tne name of the object with id = idx"""
@@ -177,7 +174,7 @@ class DeepSearcher:
 
     def average_precision(self, feats_vec, label, k):
         y_ids, y_true, y_score = self.search(feats_vec, k)
-        return average_precision_score(y_true, y_score, pos_label=label)
+        return average_precision_score([1 if v == label else 0 for v in y_true], y_score)
 
     def mean_average_precision(self, feats_vec_list, label_list, k):
         ap_sum = 0
