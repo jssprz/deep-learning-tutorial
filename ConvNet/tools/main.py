@@ -61,7 +61,7 @@ if __name__ == '__main__':
     if pargs.ckpt is not None:
         params['ckpt'] = pargs.ckpt
 
-    my_cnn = CNN(pargs.config, params)
+    my_cnn = CNN(configuration, params)
 
     run_mode = pargs.mode
     if run_mode == 'train':
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         idx_class = np.argmax(probs)
         prob = probs[idx_class]
         print("Class: {} [ {} ] ".format(idx_class, prob))
-        mapping_file = os.path.join(configuration.data_dir(), "mapping.txt")
+        mapping_file = os.path.join(configuration.data_dir, "mapping.txt")
         if os.path.exists(mapping_file):
             class_mapping = PMapping(mapping_file)
             print("Predicted class [{}]".format(class_mapping.get_class_name(idx_class)))
