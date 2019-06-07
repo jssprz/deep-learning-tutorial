@@ -195,7 +195,7 @@ class DeepSearcher:
         partials_sums = [0 for _ in range(threads_count)]
 
         def worker(id):
-            partial_size = self.size/threads_count
+            partial_size = int(self.size/threads_count)
             for i in range(partial_size * (id-1), partial_size * id):
                 ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
                 partials_sums[id] += 0 if math.isnan(ap) else ap
