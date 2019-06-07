@@ -11,6 +11,7 @@ import time
 import enum
 import struct
 import h5py
+import math
 import numpy as np
 from sklearn.metrics import average_precision_score
 from . import fast_predictor as fp
@@ -196,7 +197,7 @@ class DeepSearcher:
         ap_sum = 0
         for i in range(self.size):
             ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
-            ap_sum += ap
+            ap_sum += 0 if math.isnan(ap) else ap
             if i % 1000 == 0:
                 print(ap, ap_sum)
         return ap_sum / self.size
