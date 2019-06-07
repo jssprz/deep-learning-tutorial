@@ -13,14 +13,16 @@ For more details see cnnLib.cnn
 import os
 import sys
 import argparse
+import time
 import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from cnnLib import cnn
-from cnnLib import configuration as conf
-from cnnLib import pmapping as pmap
+from cnnLib.cnn import CNN
+from cnnLib.configuration import ConfigurationFile
+from cnnLib.pmapping import PMapping
+from cnnLib.deep_searcher import DeepSearcher
+from cnnLib.fast_predictor import FastPredictor
 from cnnLib.utils import get_freer_gpu
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training / testing x models")
@@ -37,7 +39,7 @@ if __name__ == '__main__':
 
     pargs = parser.parse_args()
 
-    configuration = conf.ConfigurationFile(pargs.config, pargs.name)
+    configuration = ConfigurationFile(pargs.config, pargs.name)
     print(configuration)
 
     # it is also possible to define the id of the device
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     if pargs.ckpt is not None:
         params['ckpt'] = pargs.ckpt
 
-    my_cnn = cnn.CNN(pargs.config, params)
+    my_cnn = CNN(pargs.config, params)
 
     run_mode = pargs.mode
     if run_mode == 'train':
@@ -73,10 +75,41 @@ if __name__ == '__main__':
         print("Class: {} [ {} ] ".format(idx_class, prob))
         mapping_file = os.path.join(configuration.data_dir(), "mapping.txt")
         if os.path.exists(mapping_file):
-            class_mapping = pmap.PMapping(mapping_file)
+            class_mapping = PMapping(mapping_file)
             print("Predicted class [{}]".format(class_mapping.get_class_name(idx_class)))
         else:
             print("Predicted class [{}]".format(idx_class))
+    elif run_mode == 'fast_predict':
+        faster_predictor = FastPredictor(configuration, params)
+        if pargs.list is not None:
+            with open(pargs.list) as f_in:
+                list_images = [item.strip() for item in f_in]
+            avg = 0
+            for item in list_images:
+                start = time.time()
+                predicted_probs, predicted_classes = faster_predictor.predict(item)
+                print("{} -> {}".format(predicted_classes[0], predicted_probs[0]))
+                print("OK")
+                end = time.time()
+                avg = avg + end - start
+            print("Average elapsed time {} ".format(avg / len(list_images)))
+        elif pargs.image is not None:
+            filename = pargs.image
+            while True:
+                start = time.time()
+                predicted_probs, predicted_classes = faster_predictor.predict(filename)
+                print("{} -> {}".format(predicted_classes[0], predicted_probs[0]))
+                end = time.time()
+                print("Elapsed time {} ".format(end - start))
+                filename = input("Image: ")
+                while len(filename) == 0:
+                    filename = input("Image: ")
+    elif run_mode == 'deep_search':
+        deep_searcher = DeepSearcher(configuration, params)
+        t_start = time.time()
+        print(deep_searcher.mean_average_precision(deep_searcher.feats_vectors, deep_searcher.true_labels))
+        t_elapsed = (time.time() - t_start) * 1000
+        print(">>> computes the mean_average_precision took {} ms".format(t_elapsed))
     elif run_mode == 'save':
         my_cnn.save_model()
     print("OK   ")
