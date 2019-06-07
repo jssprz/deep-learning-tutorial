@@ -270,7 +270,7 @@ class CNN:
                     checkpoint_path=os.path.join(self.configuration.snapshot_dir,
                                                  'model.ckpt-{}'.format(checkpoint_iter))))
 
-                features = [r['deep_features'][0] for r in result]
+                features = [r['deep_features'] for r in result]
 
                 searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
                 mAP = searcher.mean_average_precision(features, truth_labels, 10)
@@ -286,7 +286,7 @@ class CNN:
                         checkpoint_path=os.path.join(self.configuration.snapshot_dir,
                                                      'model.ckpt-{}'.format(checkpoint_iter))))
 
-                    features = [r['deep_features'][0] for r in result]
+                    features = [r['deep_features'] for r in result]
 
                     searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
                     mAP = searcher.mean_average_precision(features, truth_labels, 10)
