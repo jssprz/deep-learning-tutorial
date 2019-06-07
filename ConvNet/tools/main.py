@@ -27,7 +27,7 @@ from cnnLib.utils import get_freer_gpu
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training / testing x models")
     parser.add_argument("-mode", type=str,
-                        choices=['test', 'train', 'predict', 'fast_predict', 'deep_searcher', 'conf-mat', 'save'],
+                        choices=['test', 'train', 'predict', 'fast_predict', 'deep_search', 'conf-mat', 'save'],
                         help=" train | test | predict | fast_predict | deep_searcher | conf-mat | save ", required=True)
     parser.add_argument("-device", type=str, choices=['cpu', 'gpu'], help=" cpu | gpu ", required=False)
     parser.add_argument("-name", type=str, help=" name of section in the configuration file", required=True)
