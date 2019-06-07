@@ -6,15 +6,11 @@ Created on Mon Sep  3 16:05:34 2018
 @author: jsaavedr
 """
 
-import os
-import time
 import enum
-import struct
-import h5py
 import math
+import threading
 import numpy as np
 from sklearn.metrics import average_precision_score
-from . import fast_predictor as fp
 from . import norm
 
 
@@ -194,13 +190,27 @@ class DeepSearcher:
         return ap_sum / len(feats_vec_list)
 
     def inner_mean_average_precision(self, k):
-        ap_sum = 0
-        for i in range(self.size):
-            ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
-            ap_sum += 0 if math.isnan(ap) else ap
-            if i % 1000 == 0:
-                print(ap, ap_sum)
-        return ap_sum / self.size
+        threads_count = 4
+        threads = []
+        partials_sums = [0 for _ in range(threads_count)]
+
+        def worker(id):
+            partial_size = self.size/threads_count
+            for i in range(partial_size * (id-1), partial_size * id):
+                ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
+                partials_sums[id] += 0 if math.isnan(ap) else ap
+                if i % 1000 == 0:
+                    print(ap, partials_sums[id])
+
+        for i in range(threads_count):
+            t = threading.Thread(target=worker, args=(i+1,))
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        return sum(partials_sums) / self.size
 
     def normalize(self, features_vec):
         if self.norm == JNorm.SQUARE_ROOT_UNIT:
