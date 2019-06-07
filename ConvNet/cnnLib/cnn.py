@@ -15,6 +15,8 @@ from . import cnn_model as model
 from . import data as data
 from . import imgproc
 from . import confusion_matrix as cm
+from . import deep_searcher
+from . import pmapping as pmap
 
 
 class CNN:
@@ -231,33 +233,69 @@ class CNN:
         predicted_result = list(classifier.predict(input_fn=predict_input_fn))
         return predicted_result
 
-    def predict_on_list(self, list_of_images):
+    def deep_search_on_list(self, data_filename, map_filename, checkpoint_iter=None):
         """test checkpoint exist """
-        assert os.path.exists(os.path.join(self.configuration.snapshot_dir,
-                                           "checkpoint")), "Checkpoint file does not exist in {}".format(
-            self.configuration.snapshot_dir)
-        classifier = tf.estimator.Estimator(model_fn=model.model_fn,
-                                            model_dir=self.configuration.snapshot_dir,
-                                            params={'learning_rate': self.configuration.learning_rate,
-                                                    'number_of_classes': self.configuration.number_of_classes,
-                                                    'image_shape': self.image_shape,
-                                                    'number_of_channels': self.configuration.number_of_channels,
-                                                    'arch': self.configuration.arch
-                                                    })
-        #
-        tf.logging.set_verbosity(tf.logging.INFO)  # Just to have some logs to display for demonstration
-        batch_of_images = data.input_fn_for_prediction_on_list(list_of_images,
-                                                               self.image_shape,
-                                                               self.mean_img,
-                                                               self.configuration.number_of_channels,
-                                                               self.processFun)
-        predict_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x=batch_of_images,
-            num_epochs=1,
-            shuffle=False)
-        # classifier could use checkpoint_path to define the checkpoint to be used
-        predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))
-        return predicted_result
+        assert os.path.exists(os.path.join(self.configuration.snapshot_dir, "checkpoint")), \
+            "Checkpoint file does not exist in {}".format(self.configuration.snapshot_dir)
+
+        with tf.device(self.device):
+            tf.logging.set_verbosity(tf.logging.INFO)  # Just to have some logs to display for demonstration
+
+            classifier = tf.estimator.Estimator(model_fn=model.model_fn,
+                                                model_dir=self.configuration.snapshot_dir,
+                                                params={'learning_rate': self.configuration.learning_rate,
+                                                        'number_of_classes': self.configuration.number_of_classes,
+                                                        'image_shape': self.image_shape,
+                                                        'number_of_channels': self.configuration.number_of_channels,
+                                                        'arch': self.configuration.arch
+                                                        })
+
+            mapping = pmap.PMapping(map_filename)
+
+            with open(data_filename, 'r') as file:
+                lines = [line.rstrip() for line in file]
+                lines_ = [tuple(line.rstrip().split('\t')) for line in lines]
+                filenames, labels = zip(*lines_)
+                truth_labels = [mapping.get_class_name(x) for x in data.validateLabels(labels)]
+
+            # batch_of_images = data.input_fn_for_prediction_on_list(filenames, self.image_shape, self.mean_img,
+            #                                                        self.configuration.number_of_channels,
+            #                                                        self.processFun)
+            # predict_input_fn = tf.estimator.inputs.numpy_input_fn(x=batch_of_images, num_epochs=1, shuffle=False)
+
+            if checkpoint_iter is not None:
+                result = list(classifier.predict(
+                    input_fn=lambda: data.input_fn(data_filename, self.image_shape, self.mean_img, False,
+                                                   self.configuration),
+                    checkpoint_path=os.path.join(self.configuration.snapshot_dir,
+                                                 'model.ckpt-{}'.format(checkpoint_iter))))
+
+                features = [r['deep_features'][0] for r in result]
+
+                searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
+                mAP = searcher.mean_average_precision(features, truth_labels, 10)
+
+                tf.summary.scalar('map', mAP)
+            else:
+                checkpoints_iters = sorted([int(x[11:-6]) for x in filter(lambda s: '.index' in s,
+                                                                          os.listdir(self.configuration.snapshot_dir))])
+                for checkpoint_iter in checkpoints_iters:
+                    result = list(classifier.predict(
+                        input_fn=lambda: data.input_fn(data_filename, self.image_shape, self.mean_img, False,
+                                                       self.configuration),
+                        checkpoint_path=os.path.join(self.configuration.snapshot_dir,
+                                                     'model.ckpt-{}'.format(checkpoint_iter))))
+
+                    features = [r['deep_features'][0] for r in result]
+
+                    searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
+                    mAP = searcher.mean_average_precision(features, truth_labels, 10)
+
+                    tf.summary.scalar('map', mAP)
+
+            # classifier could use checkpoint_path to define the checkpoint to be used
+            # predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))
+            return map
 
     def save_model(self):
         """save model for prediction """

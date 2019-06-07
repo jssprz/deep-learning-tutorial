@@ -110,11 +110,14 @@ if __name__ == '__main__':
                 while len(filename) == 0:
                     filename = input("Image: ")
     elif run_mode == 'deep_search':
-        deep_searcher = DeepSearcher(configuration, params)
-        t_start = time.time()
-        print(deep_searcher.mean_average_precision(deep_searcher.feats_vectors, deep_searcher.true_labels))
-        t_elapsed = (time.time() - t_start) * 1000
-        print(">>> computes the mean_average_precision took {} ms".format(t_elapsed))
+        data_filename = os.path.join(configuration.data_dir, 'filelist.txt')
+        mapping_filename = os.path.join(configuration.data_dir, "mapping.txt")
+        my_cnn.deep_search_on_list(data_filename, mapping_filename)
+        # deep_searcher = DeepSearcher(configuration, params)
+        # t_start = time.time()
+        # print(deep_searcher.mean_average_precision(deep_searcher.feats_vectors, deep_searcher.true_labels))
+        # t_elapsed = (time.time() - t_start) * 1000
+        # print(">>> computes the mean_average_precision took {} ms".format(t_elapsed))
     elif run_mode == 'save':
         my_cnn.save_model()
     print("OK   ")

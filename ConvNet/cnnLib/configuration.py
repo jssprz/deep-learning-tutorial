@@ -54,6 +54,9 @@ class ConfigurationFile:
             self.__channels = int(section['CHANNELS'])
             self.__class_labels = section['CLASS_LABELS'].split(',')
 
+            if 'DEEP_FEATS_LAYER' in section:
+                self.__deep_feats_layer = section['DEEP_FEATS_LAYER']
+
             assert self.__channels in [1, 3], 'The number of channels must be 1 or 3'
         except Exception:
             raise ValueError("something wrong with configuration file " + config_path)
@@ -137,6 +140,10 @@ class ConfigurationFile:
     @property
     def class_labels(self):
         return self.__class_labels
+
+    @property
+    def deep_feats_layer(self):
+        return self.__deep_feats_layer
 
     def is_a_valid_section(self, section_name):
         return section_name in self.__config.sections()
