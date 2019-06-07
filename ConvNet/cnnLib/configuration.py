@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 10 14:00:28 2018
 
-@author: jsaavedr
 """
 
-import json
 from configparser import ConfigParser
 
 
@@ -56,6 +53,12 @@ class ConfigurationFile:
 
             if 'DEEP_FEATS_LAYER' in section:
                 self.__deep_feats_layer = section['DEEP_FEATS_LAYER']
+
+            if 'METRIC' in section:
+                self.__metric = section['METRIC']
+
+            if 'NORM' in section:
+                self.__norm = section['NORM']
 
             assert self.__channels in [1, 3], 'The number of channels must be 1 or 3'
         except Exception:
@@ -144,6 +147,14 @@ class ConfigurationFile:
     @property
     def deep_feats_layer(self):
         return self.__deep_feats_layer
+
+    @property
+    def metric(self):
+        return self.__metric
+
+    @property
+    def norm(self):
+        return self.__norm
 
     def is_a_valid_section(self, section_name):
         return section_name in self.__config.sections()

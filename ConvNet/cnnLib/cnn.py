@@ -263,6 +263,12 @@ class CNN:
             #                                                        self.processFun)
             # predict_input_fn = tf.estimator.inputs.numpy_input_fn(x=batch_of_images, num_epochs=1, shuffle=False)
 
+            summary_dir = os.path.join(self.configuration.snapshot_dir, 'deep-search-{}'.format(self.configuration.model_name))
+            if 'deep-search-{}'.format(self.configuration.model_name) not in os.listdir(self.configuration.snapshot_dir):
+                os.mkdir(summary_dir)
+
+            summary_writer = tf.summary.FileWriter(logdir=summary_dir, max_queue=150)
+
             if checkpoint_iter is not None:
                 result = list(classifier.predict(
                     input_fn=lambda: data.input_fn(data_filename, self.image_shape, self.mean_img, False,
@@ -275,7 +281,7 @@ class CNN:
                 searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
                 mAP = searcher.mean_average_precision(features, truth_labels, 10)
 
-                tf.summary.scalar('map', mAP)
+                summary_writer.add_summary(tf.summary.scalar('mAP', mAP))
             else:
                 checkpoints_iters = sorted([int(x[11:-6]) for x in filter(lambda s: '.index' in s,
                                                                           os.listdir(self.configuration.snapshot_dir))])
@@ -289,10 +295,10 @@ class CNN:
                     features = [r['deep_features'] for r in result]
 
                     searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
-                    mAP = searcher.mean_average_precision(features, truth_labels, 10)
+                    mAP = searcher.inner_mean_average_precision(10)
 
                     print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
-                    tf.summary.scalar('map', mAP)
+                    summary_writer.add_summary(tf.summary.scalar('mAP', mAP), checkpoint_iter)
 
             # classifier could use checkpoint_path to define the checkpoint to be used
             # predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))
