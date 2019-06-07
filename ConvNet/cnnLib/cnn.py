@@ -291,6 +291,7 @@ class CNN:
                     searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
                     mAP = searcher.mean_average_precision(features, truth_labels, 10)
 
+                    print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
                     tf.summary.scalar('map', mAP)
 
             # classifier could use checkpoint_path to define the checkpoint to be used
