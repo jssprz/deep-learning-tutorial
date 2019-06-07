@@ -267,7 +267,7 @@ class CNN:
             if 'deep-search-{}'.format(self.configuration.model_name) not in os.listdir(self.configuration.snapshot_dir):
                 os.mkdir(summary_dir)
 
-            writer = open(os.path.join(summary_dir, 'map-log.txt'))
+            writer = open(os.path.join(summary_dir, 'map-log.txt'), 'w')
 
             if checkpoint_iter is not None:
                 result = list(classifier.predict(
@@ -297,11 +297,12 @@ class CNN:
                     searcher = deep_searcher.DeepSearcher(features, truth_labels,
                                                           params={'metric': self.configuration.metric,
                                                                   'norm': self.configuration.norm})
-                    import random
-                    mAP = random.random() #searcher.inner_mean_average_precision(10)
+                    mAP = searcher.inner_mean_average_precision(10)
 
                     print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
                     writer.write('{}\t{}\n'.format(checkpoint_iter, mAP))
+
+            writer.close()
 
             # classifier could use checkpoint_path to define the checkpoint to be used
             # predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))
