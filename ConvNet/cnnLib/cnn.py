@@ -256,7 +256,7 @@ class CNN:
                 lines = [line.rstrip() for line in file]
                 lines_ = [tuple(line.rstrip().split('\t')) for line in lines]
                 filenames, labels = zip(*lines_)
-                truth_labels = [mapping.get_class_name(x) for x in data.validateLabels(labels)]
+                truth_labels = data.validateLabels(labels)
 
             # batch_of_images = data.input_fn_for_prediction_on_list(filenames, self.image_shape, self.mean_img,
             #                                                        self.configuration.number_of_channels,
@@ -276,11 +276,15 @@ class CNN:
 
                 features = [r['deep_features'] for r in result]
 
-                searcher = deep_searcher.DeepSearcher(features, truth_labels, params={'metric': 'L2'})
-                mAP = searcher.mean_average_precision(features, truth_labels, 10)
+                searcher = deep_searcher.DeepSearcher(features, truth_labels,
+                                                      params={'metric': self.configuration.metric,
+                                                              'norm': self.configuration.norm})
+                global_mAP, classes_mAP = searcher.inner_mean_average_precision(10)
 
-                with open(os.path.join(summary_dir, 'map-log.txt'), 'a') as writer:
-                    writer.write('{}\t{}\n'.format(checkpoint_iter, mAP))
+                with open(os.path.join(summary_dir, 'ckpt-{}-classes-map-log.txt'.format(checkpoint_iter)), 'a') as writer:
+                    for i, c_mAP in enumerate(classes_mAP):
+                        writer.write('{}:\t{}\n'.format(i, c_mAP))
+                    writer.write('global mAP:\t{}'.format(global_mAP))
             else:
                 checkpoints_iters = sorted([int(x[11:-6]) for x in filter(lambda s: '.index' in s,
                                                                           os.listdir(self.configuration.snapshot_dir))])
@@ -296,12 +300,12 @@ class CNN:
                     searcher = deep_searcher.DeepSearcher(features, truth_labels,
                                                           params={'metric': self.configuration.metric,
                                                                   'norm': self.configuration.norm})
-                    mAP = searcher.inner_mean_average_precision(10)
+                    global_mAP, classes_mAP = searcher.inner_mean_average_precision(10)
 
-                    print('mAP for checkpoint {}: {}'.format(checkpoint_iter, mAP))
+                    print('mAP for checkpoint {}: {}'.format(checkpoint_iter, global_mAP))
 
                     with open(os.path.join(summary_dir, 'map-log.txt'), 'a') as writer:
-                        writer.write('{}\t{}\n'.format(checkpoint_iter, mAP))
+                        writer.write('{}\t{}\n'.format(checkpoint_iter, global_mAP))
 
             # classifier could use checkpoint_path to define the checkpoint to be used
             # predicted_result = list(classifier.predict(input_fn=predict_input_fn, yield_single_examples=False))

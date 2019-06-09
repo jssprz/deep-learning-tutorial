@@ -11,6 +11,7 @@ import math
 import threading
 import numpy as np
 from sklearn.metrics import average_precision_score
+from sklearn.preprocessing import normalize
 from . import norm
 
 
@@ -151,6 +152,7 @@ class DeepSearcher:
         self.feats_vectors = self.normalize(np.array(features))
         self.true_labels = np.array(true_labels)
         self.size = len(features)
+        self.classes, self.classes_counts = np.unique(self.true_labels, return_counts=True)
 
     def search(self, feats_vec, k, leave_one_out=True):
         """
@@ -189,18 +191,16 @@ class DeepSearcher:
             ap_sum += self.average_precision(norm_feats_vec_list[i], label_list[i], k)
         return ap_sum / len(feats_vec_list)
 
-    def inner_mean_average_precision(self, k):
+    def inner_mean_average_precision(self, k=10, threads_count=4):
         threads_count = 4
         threads = []
-        partials_sums = [0 for _ in range(threads_count)]
+        partials_sums = np.zeros((threads_count, len(self.classes))) #[0 for _ in range(threads_count)]
 
         def worker(id):
-            partial_size = int(self.size/threads_count)
+            partial_size = self.size // threads_count
             for i in range(partial_size * id, partial_size * (id+1)):
                 ap = self.average_precision(self.feats_vectors[i], self.true_labels[i], k)
-                partials_sums[id] += 0 if math.isnan(ap) else ap
-                if i % 1000 == 0:
-                    print(ap, partials_sums[id])
+                partials_sums[id, self.true_labels[i]] += 0 if math.isnan(ap) else ap
 
         for i in range(threads_count):
             t = threading.Thread(target=worker, args=(i,))
@@ -210,9 +210,13 @@ class DeepSearcher:
         for t in threads:
             t.join()
 
-        return sum(partials_sums) / self.size
+        classes_sums = np.sum(partials_sums, axis=0)
 
-    def normalize(self, features_vec):
+        return sum(classes_sums) / self.size, classes_sums / self.classes_counts
+
+    def normalize(self, features_vectors):
         if self.norm == JNorm.SQUARE_ROOT_UNIT:
-            return norm.square_root_norm(features_vec)
-        return features_vec
+            return norm.square_root_norm(features_vectors)
+        elif self.norm == JNorm.UNIT:
+            return normalize(features_vectors)
+        return features_vectors
